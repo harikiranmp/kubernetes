@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stateful-app
+spec:
+  serviceName: "statefulapp"
+  replicas: 2  # EBS PVCs can be attached to only one node at a time
+  selector:
+    matchLabels:
+      app: my-stateful-app
+  template:
+    metadata:
+      labels:
+        app: my-stateful-app
+    spec:
+      containers:
+      - name: my-container
+        image: nginx
+        volumeMounts:
+        - name: pvc-vol
+          mountPath: /data  # Mounting PVC inside the container
+      volumes:
+      - name: pvc-vol
+        persistentVolumeClaim:
+          claimName: ebs-claim  # Using the pre-created PVC
+

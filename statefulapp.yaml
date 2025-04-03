@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stateful-app
+spec:
+  serviceName: "my-service"
+  replicas: 2  # Adjust replicas based on requirement
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-container
+        image: nginx  # Replace with your application image
+        volumeMounts:
+        - name: ebs-claim
+          mountPath: /data  # Mounting the volume inside the container
+  volumeClaimTemplates:
+  - metadata:
+      name: ebs-claim
+    spec:
+      accessModes: 
+        - ReadWriteOnce  # EBS supports only RWO
+      storageClassName: gp2  # Change based on your AWS StorageClass
+      resources:
+        requests:
+          storage: 4Gi  # Adjust as per your PVC size
+

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stateful-appd
+spec:
+  serviceName: "my-service"
+  replicas: 2  # Each pod gets its own PVC
+  selector:
+    matchLabels:
+      app: stateful-app-d
+  template:
+    metadata:
+      labels:
+        app: stateful-app-d
+    spec:
+      containers:
+      - name: my-container
+        image: nginx
+        volumeMounts:
+        - name: dynamic-storage
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: dynamic-storage
+    spec:
+      accessModes:
+        - ReadWriteOnce  # AWS EBS is RWO
+      storageClassName: ebs-sc  # Ensure correct storage class
+      resources:
+        requests:
+          storage: 2Gi
+

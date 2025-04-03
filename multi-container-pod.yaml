@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-container-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multi-container
+  template:
+    metadata:
+      labels:
+        app: multi-container
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: ip-172-31-14-29 
+      containers:
+        - name: nginx-container
+          image: nginx
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+        - name: prometheus-exporter
+          image: prom/node-exporter
+          ports:
+            - containerPort: 9100
+
+        - name: failing-container
+          image: busybox
+          command: ["/bin/sh", "-c", "sleep 30 && kill 1"]  # This will cause a crash-loop
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "exit 1"]  # Ensures liveness probe fails
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-exporter-service
+spec:
+  selector:
+    app: multi-container
+  ports:
+    - protocol: TCP
+      port: 9100
+      targetPort: 9100
+
